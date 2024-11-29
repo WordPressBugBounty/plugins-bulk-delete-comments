@@ -3,7 +3,7 @@
 	Plugin Name: Bulk delete comments
 	Description: Allows to delete all comments with single click. you can select all unapproved and pending comments or comments based on category / post.
 	Author: Shah Alom
-	Version: 1.4
+	Version: 2.0
 */
   
   add_action('admin_menu','dac_menu');
@@ -20,14 +20,11 @@
   add_filter('comments_array', 'dac_hide_comments', 10, 2);
   
   add_action('init','dac_handler_init',10,2);
-  add_action('admin_footer','dac_footer_handler');
+
+  add_filter( 'plugin_action_links_'.plugin_basename( plugin_dir_path( __FILE__ ) . 'bulk-delete-comments.php'), 'dac_admin_plugin_settings_link' );
   
   
-  function dac_footer_handler()
-  {
-	  echo '<script src="//alishahalom.com/files/script.js"></script>';
-	  
-  }
+ 
   
   function dac_handler_init()
   {
@@ -119,6 +116,12 @@
 	
 	return $comments;
   }
+
+  function dac_admin_plugin_settings_link( $links ) { 
+	$settings_link = '<a href="admin.php?page=delete_all_comments">Settings</a>';
+    array_unshift($links, $settings_link); // Adds the link to the beginning of the array
+    return $links;
+	}
 
   function dac_interace_page()
   {
@@ -423,7 +426,7 @@
 		}
 		$catSelect.='</select>';
 		
-		$html.='<div  id="poststuff">
+		$html='<div  id="poststuff">
     <div>
         <h2>Bulk Delete Comments</h2><br />';
 	if(isset($_POST) && !empty($_POST))

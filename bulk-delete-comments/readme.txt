@@ -3,10 +3,10 @@ Author: Shah Alom
 Author URI: http://www.oviamsolutions.com
 Contributors: Shah Alom
 Donate link:https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=X6Z2BBNERP6V2
-Tags: delete all comments, delete comments,comment, comments,delete all, delete, remove all comments, remove all, spam, post-trash
+Tags: delete all comments, delete comments, remove all comments
 Requires at least: 5.0
-Tested up to: 5.8
-Stable tag: 1.4
+Tested up to: 6.7
+Stable tag: 2.0
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -28,6 +28,10 @@ Just a standard installation required.
 
 
 == Changelog ==
+
+= 2.0 =
+Imporve the code related to ouput in admin page
+Added Settings linksin plugin page
 
 = 1.4 =
 Option to disable the comment box  and hide the comments at frontend
