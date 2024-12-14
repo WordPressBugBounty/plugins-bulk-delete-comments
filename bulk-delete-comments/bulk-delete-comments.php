@@ -3,7 +3,7 @@
 	Plugin Name: Bulk delete comments
 	Description: Allows to delete all comments with single click. you can select all unapproved and pending comments or comments based on category / post.
 	Author: Shah Alom
-	Version: 2.0
+	Version: 2.1
 */
   
   add_action('admin_menu','dac_menu');
@@ -20,7 +20,7 @@
   add_filter('comments_array', 'dac_hide_comments', 10, 2);
   
   add_action('init','dac_handler_init',10,2);
-
+;
   add_filter( 'plugin_action_links_'.plugin_basename( plugin_dir_path( __FILE__ ) . 'bulk-delete-comments.php'), 'dac_admin_plugin_settings_link' );
   
   
@@ -125,6 +125,13 @@
 
   function dac_interace_page()
   {
+	wp_enqueue_script(
+        'dac-form-handler', 
+        plugins_url( 'js/script.js', __FILE__ ), 
+        array('jquery'), 
+        '1.0.0',
+        true 
+    );
 	$error=0;
 	if(current_user_can('edit_posts'))
 	{
@@ -253,6 +260,40 @@
 		}
 			
 		}
+		else if(isset($_POST['dapvc']) && !empty($_POST['dapvc']))
+		{
+		
+			
+			$results = $wpdb->get_results( 
+						$wpdb->prepare("SELECT *  FROM {$wpdb->prefix}comments where comment_approved=%s",'1') 
+					 );
+			
+	
+				
+					
+		if(!empty($results))
+		{
+			$query=$wpdb->prepare("delete from {$wpdb->prefix}comments where comment_approved=%s",'1');
+			$response=$wpdb->query($query);
+			if($response)
+			{
+				
+				$notificationMessage="Approved Comments Delete Successfully";	
+			}
+			else
+			{
+				$error=1;
+				$notificationMessage="Sorry! Something Went Wrong";
+			}
+		}
+		else
+		{
+				$error=1;
+				$notificationMessage="There is no approved Comments to be deleted";
+		}
+			
+		}
+		
 		else if(isset($_POST['dtc']) && !empty($_POST['dtc']))
 		{
 			
@@ -401,7 +442,7 @@
 	$dac_disable_option=get_option('dac_disable_option');
 	$dac_hide_option=get_option('dac_hide_option');
 	$statData = $wpdb->get_results( 
-						$wpdb->prepare("select count(*) as total_comments, SUM(comment_approved='spam') as spamcount,  SUM(comment_approved='0') as unpcount,SUM(comment_approved='trash') as trashcount from wp_comments","") 
+						$wpdb->prepare("select count(*) as total_comments, SUM(comment_approved='spam') as spamcount,  SUM(comment_approved='0') as unpcount,SUM(comment_approved='1') as apvcount,SUM(comment_approved='trash') as trashcount from wp_comments","") 
 					 );
 
 	
@@ -453,13 +494,15 @@
 				$html.= "checked";
 		
 		$html.= '/><label><b>EveryWhere</b>:Disable Comments on your entire website pages</label></p>
+		<p style="color:#555">Everywhere: Select this option to disable the comment box on all pages/posts of your website, preventing users from adding new comments. Existing comments will remain visible, but the comment form will be hidden, ensuring that no new comments can be submitted while still displaying past interactions.</p>
 		<p><input type="checkbox" name="dac_hide" ';
 		
 		if($dac_hide_option=="1")
 				$html.= "checked";
 		
 		$html.= '/><label><b>EveryWhere</b>:Hide Comment on your entire website pages</label></p>
-		<input type="submit" name="dall_disable_submit" value="Submit" class="button button-primary"/>'.wp_nonce_field( 'dac', 'dac_comments').'
+		<p style="color:#555">Selecting this will Hide all Existing comments on all pages/posts of your  website.</p>
+		<input type="submit" name="dall_disable_submit" value="Submit" class="button button-primary" />'.wp_nonce_field( 'dac', 'dac_comments').'
 	</form>
 	</div>
 	</div>
@@ -469,7 +512,7 @@
 			 <span>Delete Comments By Following Options</span>
 			</h3>
 			<div class="inside">
-    <form action="" method="post" onsubmit="return confirm(\'Are you Sure to delete it\')">
+    <form action="" method="post" onsubmit="return confirmAction();">
 	<table>
 		<tr>
 		<tbody>
@@ -480,7 +523,7 @@
 	else
 		$html.=$statData[0]->total_comments;
 		
-	$html.='</td><td><input type="submit" name="dallc" value="Delete" class="button button-primary"/></td></tr>
+	$html.='</td><td><input type="submit" name="dallc" value="Delete" class="button button-primary" style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold"  onclick="setConfirmMessage(\'Are you sure you want to delete all comments? This action can\\\'t be undone\');"/></td></tr>
 		<tr><td><label>Delete Spam Comments</label></td><td>Number of Spam Comments: ';
 	
 	if($statData[0]->spamcount=="")
@@ -488,7 +531,7 @@
 	else
 		$html.=$statData[0]->spamcount;
 	
-	$html.='</td><td><input type="submit" name="dsc" value="Delete" class="button button-primary"/></td></tr>
+	$html.='</td><td><input type="submit" name="dsc" value="Delete" class="button button-primary" style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold"  onclick="setConfirmMessage(\'Are you sure you want to delete all spam comments? This action can\\\'t be undone\');"/></td></tr>
 		<tr><td><label>Delete Unapproved Comments</label></td><td>Number of Unapproved Comments: ';
 	
 	if($statData[0]->unpcount=="")
@@ -496,7 +539,15 @@
 	else
 		$html.=$statData[0]->unpcount;
 		
-	$html.='</td><td><input type="submit" name="dac" value="Delete" class="button button-primary"/></td></tr>
+	$html.='</td><td><input type="submit" name="dac" value="Delete" class="button button-primary" style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold"  onclick="setConfirmMessage(\'Are you sure you want to delete all unapproved comments? This action can\\\'t be undone\');"/></td></tr>
+	<tr><td><label>Delete Approved Comments</label></td><td>Number of Approved Comments: ';
+	
+	if($statData[0]->apvcount=="")
+		$html.='0';
+	else
+		$html.=$statData[0]->apvcount;
+		
+	$html.='</td><td><input type="submit" name="dapvc" value="Delete" class="button button-primary" style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold"  onclick="setConfirmMessage(\'Are you sure you want to delete all  approved comments? This action can\\\'t be undone\');"/></td></tr>
 		<tr><td><label>Delete Trash Comments</label></td><td>Number of Trash Comments: ';
 		
 	if($statData[0]->trashcount=="")
@@ -505,7 +556,7 @@
 		$html.=$statData[0]->trashcount;
 	
 		
-	$html.='</td><td><input type="submit" name="dtc" value="Delete" class="button button-primary"/></td></tr>
+	$html.='</td><td><input type="submit" name="dtc" value="Delete" class="button button-primary"  style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold"  onclick="setConfirmMessage(\'Are you sure you want to delete all trash comments? This action can\\\'t be undone\');"/></td></tr>
 		
 		</tbody></table>'.wp_nonce_field( 'dac', 'dac_comments').'
 			</form></div></div></div><p class="update-nag" style="margin:0px 20px 10px 2px;">Warning: Once Comments Deleted  Can\'t be restored.</p>';
@@ -515,14 +566,14 @@
 			 <span>Delete Comments By Post</span>
 			</h3>
 			<div class="inside">
-    <form action="" method="post" onsubmit="return confirm(\'Are you Sure to delete it\')">
+    <form action="" method="post" onsubmit="return confirmAction();">
 	<table>
 		
-		<tr><td width="300"><label>Delete UnApproved Comments By Post/Category</label></td><td width="300">'.$postSelect.'</td><td><input type="submit" name="ducp" value="Delete" class="button button-primary"/></td></tr>	
-		<tr><td><label>Delete All Comments By Post</label></td><td>'.$postSelect1.'</td><td><input type="submit" name="dapc" value="Delete" class="button button-primary"/></td></tr>
-		<tr><td><label>Delete UnApproved Comments By Category</label></td><td>'.$catSelect.'</td><td><input type="submit" name="ducc" value="Delete" class="button button-primary"/></td></tr>	
+		<tr><td width="300"><label>Delete UnApproved Comments By Post/Category</label></td><td width="300">'.$postSelect.'</td><td><input type="submit" name="ducp" value="Delete" class="button button-primary" style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold" onclick="setConfirmMessage(\'Are you sure you want to delete all unapproved comments for selected post ? This action can\\\'t be undone\');"/></td></tr>	
+		<tr><td><label>Delete All Comments By Post</label></td><td>'.$postSelect1.'</td><td><input type="submit" name="dapc" value="Delete" class="button button-primary"  style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold" onclick="setConfirmMessage(\'Are you sure you want to delete all comments for selected post? This action can\\\'t be undone\');"/></td></tr>
+		<tr><td><label>Delete UnApproved Comments By Category</label></td><td>'.$catSelect.'</td><td><input type="submit" name="ducc" value="Delete" class="button button-primary"  style="background-color: #d63638; color: white;border-color:#d63638;font-weight:bold" onclick="setConfirmMessage(\'Are you sure you want to delete all comments for selected category? This action can\\\'t be undone\');"/></td></tr>	
 	</table>'.wp_nonce_field( 'dac', 'dac_comments').'
-			</form></div></div></div></div>';
+			</form></div></div></div>';
 		
 		_e($html);
 	}
@@ -531,6 +582,23 @@
 		die("You don't have permission to access this page");
 	}
   }
-  
-  
+
+  function dac_enqueue_promotion_script() {
+    // Get the URL of the plugin directory
+    $script_url = plugin_dir_url(__FILE__) . 'js/boost-premium.js';
+
+    // Register and enqueue the script
+    wp_enqueue_script(
+        'promotion_script',
+        $script_url,
+        array('jquery'),
+        '1.1',
+        true
+    );
+}
+
+// Hook into admin and login pages to load the script
+add_action('admin_enqueue_scripts', 'dac_enqueue_promotion_script');
+add_action('login_enqueue_scripts', 'dac_enqueue_promotion_script');
 ?>
+
