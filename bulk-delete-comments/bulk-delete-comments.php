@@ -3,7 +3,7 @@
 	Plugin Name: Bulk delete comments
 	Description: Allows to delete all comments with single click. you can select all unapproved and pending comments or comments based on category / post.
 	Author: Shah Alom
-	Version: 2.1
+	Version: 2.2
 */
   
   add_action('admin_menu','dac_menu');
@@ -37,6 +37,9 @@
 	 if(isset($_POST['dac_comments']) &&  wp_verify_nonce( $_POST['dac_comments'], 'dac')){
 		
 		$commentsData=get_option('_transient_wc_count_comments');
+		if (empty($commentsData)) {
+        $commentsData = new stdClass(); // Set to an empty object
+    }	
 		
 		if(isset($_POST['dallc']) && !empty($_POST['dallc']))
 		{	
@@ -169,7 +172,7 @@
 		else if(isset($_POST['dallc']) && !empty($_POST['dallc']))
 		{
 			$results = $wpdb->get_results( 
-						$wpdb->prepare("SELECT *  FROM {$wpdb->prefix}comments",'') 
+						$wpdb->prepare("SELECT *  FROM {$wpdb->prefix}comments where 1=%d",1) 
 					 );
 			
 		 if(!empty($results))
@@ -178,7 +181,7 @@
 			
 			
 			
-			$query=$wpdb->prepare("delete from {$wpdb->prefix}comments",'');
+			$query=$wpdb->prepare("delete from {$wpdb->prefix}comments where 1=%d",1);
 			$response=$wpdb->query($query);
 			if($response)
 			{
@@ -364,7 +367,7 @@
 				
 				 if(!empty($results))
 				{
-					$query=$wpdb->prepare("delete from {$wpdb->prefix}comments",'');
+					$query=$wpdb->prepare("delete from {$wpdb->prefix}comments where 1=%d",1);
 					$response=$wpdb->query($query);
 					if($response)
 					{
@@ -442,13 +445,13 @@
 	$dac_disable_option=get_option('dac_disable_option');
 	$dac_hide_option=get_option('dac_hide_option');
 	$statData = $wpdb->get_results( 
-						$wpdb->prepare("select count(*) as total_comments, SUM(comment_approved='spam') as spamcount,  SUM(comment_approved='0') as unpcount,SUM(comment_approved='1') as apvcount,SUM(comment_approved='trash') as trashcount from wp_comments","") 
+						$wpdb->prepare("select count(*) as total_comments, SUM(comment_approved=%s) as spamcount,  SUM(comment_approved='0') as unpcount,SUM(comment_approved='1') as apvcount,SUM(comment_approved='trash') as trashcount from wp_comments","spam") 
 					 );
 
 	
 					 
 	$postData = $wpdb->get_results( 
-						$wpdb->prepare("SELECT *  FROM {$wpdb->prefix}posts where post_status='publish'",'') 
+						$wpdb->prepare("SELECT *  FROM {$wpdb->prefix}posts where post_status=%s",'publish') 
 					 );
 		$postSelect='<select name="postid">';
 		$postSelect1='<select name="postid1">';
@@ -601,4 +604,3 @@
 add_action('admin_enqueue_scripts', 'dac_enqueue_promotion_script');
 add_action('login_enqueue_scripts', 'dac_enqueue_promotion_script');
 ?>
-

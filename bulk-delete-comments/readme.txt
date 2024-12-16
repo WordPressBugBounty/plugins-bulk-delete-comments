@@ -6,7 +6,7 @@ Donate link: https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_i
 Tags: delete all comments, delete comments, comment, comments, delete all, delete, remove all comments, remove all, spam, post-trash
 Requires at least: 5.0
 Tested up to: 6.7
-Stable tag: 2.1
+Stable tag: 2.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -25,6 +25,10 @@ Just a standard installation required.
 3. Activate the plugin through the 'Plugins' menu in WordPress.
 
 == Changelog ==
+
+= 2.2 =
+- Fixed Errors and Warnings .
+
 
 = 2.1 =
 - Changed the admin page style.
