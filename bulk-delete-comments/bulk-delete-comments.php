@@ -1,18 +1,23 @@
 <?php
  /*
-	Plugin Name: Bulk delete comments
-	Description: Allows to delete all comments with single click. you can select all unapproved and pending comments or comments based on category / post.
+	Plugin Name: Bulk Delete Comments
+	Description: Effortlessly bulk delete comments and clean up your WordPress site with ease. Remove all comments, including spam, unapproved, and trash, or filter by post and category in a single click.
 	Author: Shah Alom
-	Version: 2.2
+	Version: 2.3
 */
   
-  add_action('admin_menu','dac_menu');
-  
-  function dac_menu()
-  {
-	add_menu_page('Bulk Delete Comments', 'Bulk Delete Comments', 'manage_options', 'delete_all_comments', 'dac_interace_page', 'dashicons-trash',null );
-  }
-  
+  add_action('admin_menu', 'dac_menu');
+
+  function dac_menu() {
+		
+		add_options_page(
+			'Bulk Delete Comments',  
+			'Bulk Delete Comments',  
+			'manage_options',        
+			'delete_all_comments',   
+			'dac_interace_page'      
+		);
+	}
   
   
   add_filter('comments_open', 'dac_disable_comments', 20, 2);
@@ -20,11 +25,33 @@
   add_filter('comments_array', 'dac_hide_comments', 10, 2);
   
   add_action('init','dac_handler_init',10,2);
-;
+
   add_filter( 'plugin_action_links_'.plugin_basename( plugin_dir_path( __FILE__ ) . 'bulk-delete-comments.php'), 'dac_admin_plugin_settings_link' );
   
   
- 
+
+  register_activation_hook(__FILE__, 'dac_activate_redirect');
+
+  function dac_activate_redirect() {
+
+	set_transient('dac_plugin_activated_redirect', true, 30); 
+ }
+
+
+  add_action('admin_init', 'dac_plugin_redirect_after_activation');
+
+  function dac_plugin_redirect_after_activation() {
+
+		if (get_transient('dac_plugin_activated_redirect')) {
+		  
+			delete_transient('dac_plugin_activated_redirect');
+			
+		   
+			wp_redirect(admin_url('admin.php?page=delete_all_comments'));
+	  
+		}
+	}
+
   
   function dac_handler_init()
   {
@@ -472,7 +499,7 @@
 		
 		$html='<div  id="poststuff">
     <div>
-        <h2>Bulk Delete Comments</h2><br />';
+        <h2 style="font-size:25px">Settings → Bulk Delete Comments</h2><br />';
 	if(isset($_POST) && !empty($_POST))
 	{
 		
