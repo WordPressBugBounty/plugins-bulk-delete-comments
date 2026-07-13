@@ -3,7 +3,7 @@
 	Plugin Name: Bulk Delete Comments
 	Description: Effortlessly bulk delete comments and clean up your WordPress site with ease. Remove all comments, including spam, unapproved, and trash, or filter by post and category in a single click.
 	Author: Shah Alom
-	Version: 2.4
+	Version: 2.5
 */
   
   add_action('admin_menu', 'dac_menu');
